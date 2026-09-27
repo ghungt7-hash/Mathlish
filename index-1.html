@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathlish - Ứng Dụng Học Toán Tiếng Anh Tương Tác</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{brand:{50:'#eef2ff',100:'#e0e7ff',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3'}}}}}
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1e293b}
+@keyframes audioPulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(99,102,241,.7)}70%{transform:scale(1.08);box-shadow:0 0 0 10px rgba(99,102,241,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(99,102,241,0)}}
+.audio-playing{animation:audioPulse 1.2s infinite;background:#4f46e5!important;color:white!important}
+.eq-bar{display:inline-block;width:3px;height:12px;background:currentColor;margin:0 1px;border-radius:2px;animation:eqBounce .8s infinite ease-in-out alternate}
+.eq-bar:nth-child(2){animation-delay:.2s}.eq-bar:nth-child(3){animation-delay:.4s}
+@keyframes eqBounce{0%{height:4px}100%{height:16px}}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+</style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+<header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-16">
+<div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dictionary')">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white text-xl font-bold shadow-md">∑</div>
+<div><span class="text-xl font-extrabold text-slate-800 tracking-tight">Math<span class="text-brand-600">lish</span></span>
+<span class="hidden sm:inline-block text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-medium ml-2 border border-brand-100">Học Toán Tiếng Anh v2.6</span></div>
+</div>
+<div class="flex items-center space-x-2 sm:space-x-3">
+<button onclick="testAudioSystem()" title="Kiểm tra hệ thống phát âm" class="p-2 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center space-x-1.5"><i class="fa-solid fa-volume-high text-brand-600"></i><span class="hidden md:inline">Thử Âm Thanh</span></button>
+<button onclick="openShareModal()" class="px-3 py-2 text-xs sm:text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm flex items-center space-x-2"><i class="fa-solid fa-share-nodes"></i><span>Chia Sẻ & Nộp Bài</span></button>
+</div>
+</div>
+<nav class="flex space-x-1 border-t border-slate-100 overflow-x-auto py-2" id="nav-tabs">
+<button onclick="switchTab('dictionary')" id="tab-btn-dictionary" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium bg-brand-50 text-brand-700 whitespace-nowrap flex items-center space-x-2"><i class="fa-solid fa-book"></i><span>📚 Từ Vựng Toán</span></button>
+<button onclick="switchTab('quiz')" id="tab-btn-quiz" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap flex items-center space-x-2"><i class="fa-solid fa-pen-to-square"></i><span>📝 Luyện Tập</span></button>
+<button onclick="switchTab('analytics')" id="tab-btn-analytics" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap flex items-center space-x-2"><i class="fa-solid fa-chart-line"></i><span>📊 Thống Kê</span></button>
+<button onclick="switchTab('share-guide')" id="tab-btn-share-guide" class="nav-tab px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap flex items-center space-x-2"><i class="fa-solid fa-cloud-arrow-up"></i><span>🚀 Đăng Web</span></button>
+</nav>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+<div id="audio-toast" class="fixed bottom-6 right-6 z-50 bg-slate-900/95 text-white text-xs sm:text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all transform translate-y-24 opacity-0 border border-slate-700">
+<div id="audio-eq" class="hidden flex items-center text-brand-400"><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span></div>
+<i class="fa-solid fa-volume-high text-brand-400 text-lg"></i><span id="audio-toast-msg">Đang phát âm...</span>
+</div>
+
+<section id="tab-dictionary" class="tab-content">
+<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6 space-y-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div><h1 class="text-2xl font-bold text-slate-900">Từ Vựng Toán Học Tiếng Anh</h1><p class="text-sm text-slate-500 mt-1">Tra cứu khái niệm, định nghĩa, phát âm và công thức Toán.</p></div>
+<div class="flex flex-wrap gap-2">
+<button onclick="openAddTermModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium"><i class="fa-solid fa-plus"></i> Thêm Từ Mới</button>
+<button onclick="exportVocabCSV()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium"><i class="fa-solid fa-file-csv text-emerald-600"></i> Xuất CSV</button>
+</div></div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<div class="sm:col-span-2 relative"><i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i><input id="vocab-search" oninput="filterVocabulary()" placeholder="Tìm từ vựng..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"></div>
+<select id="vocab-category-filter" onchange="filterVocabulary()" class="w-full py-2.5 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl"><option value="ALL">Tất cả Chủ Đề</option><option value="Arithmetic">Số học</option><option value="Algebra">Đại số</option><option value="Geometry">Hình học</option><option value="Statistics">Thống kê</option><option value="Calculus">Giải tích</option></select>
+</div></div>
+<div id="vocab-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+<div id="vocab-empty" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200"><i class="fa-solid fa-book-open text-4xl text-slate-300 mb-3"></i><h3 class="font-semibold text-slate-700">Không tìm thấy từ vựng</h3></div>
+</section>
+
+<section id="tab-quiz" class="tab-content hidden">
+<div class="max-w-4xl mx-auto space-y-6">
+<div id="quiz-config-card" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+<div class="flex items-center space-x-3"><div class="p-3 bg-brand-100 text-brand-600 rounded-xl"><i class="fa-solid fa-gamepad text-xl"></i></div><div><h2 class="text-xl font-bold">Luyện Tập Toán Tiếng Anh</h2><p class="text-sm text-slate-500">Câu hỏi có nhiều mức độ và giải thích chi tiết.</p></div></div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+<div><label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Chủ Đề</label><select id="quiz-topic-select" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"><option value="ALL">🎲 Tất cả</option><option value="Arithmetic">🔢 Số học</option><option value="Algebra">📐 Đại số</option><option value="Geometry">📏 Hình học</option><option value="Statistics">📊 Thống kê</option></select></div>
+<div><label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Độ Khó</label><select id="quiz-difficulty-select" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"><option value="Easy">🟢 Dễ</option><option value="Medium" selected>🟡 Trung Bình</option><option value="Hard">🔴 Khó</option></select></div>
+<div><label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Số Câu</label><select id="quiz-count-select" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option></select></div>
+</div>
+<button onclick="startQuizSession()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-md"><i class="fa-solid fa-play"></i> Bắt Đầu Làm Bài</button>
+</div>
+
+<div id="quiz-active-card" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
+<div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6"><div class="flex items-center space-x-3"><span id="quiz-step-badge" class="px-3 py-1 bg-brand-100 text-brand-700 font-bold text-sm rounded-full"></span><span id="quiz-topic-badge" class="px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full"></span></div><div class="flex items-center space-x-3"><span id="quiz-timer" class="text-sm font-semibold text-slate-600">00:00</span><button onclick="speakCurrentQuestion()" class="p-2 text-brand-600 bg-brand-50 rounded-lg"><i class="fa-solid fa-volume-high"></i> Đọc</button></div></div>
+<div class="mb-6"><h3 id="quiz-question-text" class="text-lg sm:text-xl font-bold text-slate-900 mb-2"></h3><p id="quiz-question-vi" class="text-sm text-slate-500 italic"></p></div>
+<div id="quiz-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"></div>
+<div id="quiz-explanation-box" class="hidden p-4 rounded-xl border mb-6"><div class="flex items-start space-x-3"><i id="quiz-feedback-icon" class="fa-solid text-xl"></i><div><h4 id="quiz-feedback-title" class="font-bold text-sm"></h4><div id="quiz-explanation-content" class="text-sm leading-relaxed"></div></div></div></div>
+<div class="flex justify-end pt-4 border-t border-slate-100"><button id="quiz-next-btn" onclick="nextQuizQuestion()" disabled class="px-6 py-2.5 bg-slate-200 text-slate-400 font-semibold rounded-xl"><span>Câu Tiếp Theo</span> <i class="fa-solid fa-arrow-right"></i></button></div>
+</div>
+
+<div id="quiz-summary-card" class="hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center space-y-6">
+<div class="w-20 h-20 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl"><i class="fa-solid fa-trophy"></i></div>
+<div><h2 class="text-2xl font-bold">Hoàn Thành Bài Luyện Tập!</h2><p class="text-sm text-slate-500 mt-1">Kết quả đã được lưu.</p></div>
+<div class="grid grid-cols-3 gap-4 max-w-md mx-auto"><div class="p-3 bg-slate-50 rounded-xl"><span id="summary-score" class="block text-2xl font-black text-brand-600">0%</span><span class="text-xs">Điểm</span></div><div class="p-3 bg-slate-50 rounded-xl"><span id="summary-correct" class="block text-2xl font-black">0/0</span><span class="text-xs">Đúng</span></div><div class="p-3 bg-slate-50 rounded-xl"><span id="summary-time" class="block text-2xl font-black">00:00</span><span class="text-xs">Thời gian</span></div></div>
+<div class="flex justify-center space-x-3"><button onclick="resetQuizUI()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl">Làm Bài Khác</button><button onclick="switchTab('analytics')" class="px-5 py-2.5 bg-slate-100 rounded-xl">Xem Thống Kê</button></div>
+</div></div>
+</section>
+
+<section id="tab-analytics" class="tab-content hidden space-y-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h1 class="text-2xl font-bold">Thống Kê Tiến Độ</h1><p class="text-sm text-slate-500">Theo dõi kết quả và lịch sử học tập.</p></div><button onclick="exportHistoryCSV()" class="px-4 py-2 bg-emerald-600 text-white font-medium text-sm rounded-xl"><i class="fa-solid fa-file-csv"></i> Xuất CSV</button></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs text-slate-500">Tổng bài</span><h3 id="stat-total-quizzes" class="text-2xl font-bold">0</h3></div>
+<div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs text-slate-500">Điểm trung bình</span><h3 id="stat-avg-score" class="text-2xl font-bold text-emerald-600">0%</h3></div>
+<div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs text-slate-500">Tổng thời gian</span><h3 id="stat-total-time" class="text-2xl font-bold">0 phút</h3></div>
+<div class="bg-white p-5 rounded-2xl border shadow-sm"><span class="text-xs text-slate-500">Chủ đề có điểm TB cao nhất</span><h3 id="stat-best-topic" class="text-base font-bold">Chưa có</h3></div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white p-5 rounded-2xl border shadow-sm"><h3 class="font-bold mb-4">Tiến Độ Điểm Số</h3><div class="h-64"><canvas id="score-line-chart"></canvas></div></div>
+<div class="bg-white p-5 rounded-2xl border shadow-sm"><h3 class="font-bold mb-4">Phân Bố Câu Theo Chủ Đề</h3><div class="h-64"><canvas id="topic-pie-chart"></canvas></div></div>
+</div>
+<div class="bg-white rounded-2xl border shadow-sm overflow-hidden"><div class="px-6 py-4 border-b flex justify-between"><h3 class="font-bold">Lịch Sử</h3><button onclick="clearHistory()" class="text-xs text-red-600">Xóa Lịch Sử</button></div><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-xs uppercase"><tr><th class="px-6 py-3">Thời gian</th><th class="px-6 py-3">Chủ đề</th><th class="px-6 py-3">Độ khó</th><th class="px-6 py-3">Kết quả</th><th class="px-6 py-3">Tỉ lệ</th><th class="px-6 py-3">Thời gian</th></tr></thead><tbody id="history-table-body" class="divide-y"></tbody></table></div></div>
+</section>
+
+
+
+<section id="tab-share-guide" class="tab-content hidden space-y-6">
+<div class="bg-white p-6 rounded-2xl border shadow-sm">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5"><div><h1 class="text-2xl font-bold">Hướng Dẫn Chia Sẻ Web & Nộp Bài</h1><p class="text-sm text-slate-500">Tải file HTML rồi đưa lên dịch vụ hosting.</p></div><div class="flex gap-2"><button onclick="downloadAppSourceCode()" class="px-4 py-2.5 bg-brand-600 text-white rounded-xl"><i class="fa-solid fa-download"></i> Tải index.html</button><button onclick="copySourceCodeToClipboard()" class="px-4 py-2.5 bg-slate-100 rounded-xl"><i class="fa-regular fa-copy"></i> Sao Chép</button></div></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+<div class="bg-slate-50 p-5 rounded-2xl border"><h3 class="font-bold">1. Netlify Drop</h3><ol class="list-decimal list-inside text-xs space-y-2 mt-3"><li>Tải <b>index.html</b>.</li><li>Truy cập Netlify Drop.</li><li>Kéo thả file vào trang.</li><li>Nhận link web.</li></ol></div>
+<div class="bg-slate-50 p-5 rounded-2xl border"><h3 class="font-bold">2. GitHub Pages</h3><ol class="list-decimal list-inside text-xs space-y-2 mt-3"><li>Tạo repository.</li><li>Upload <b>index.html</b>.</li><li>Vào Settings → Pages.</li><li>Chọn branch main và lưu.</li></ol></div>
+<div class="bg-slate-50 p-5 rounded-2xl border"><h3 class="font-bold">3. Vercel</h3><ol class="list-decimal list-inside text-xs space-y-2 mt-3"><li>Đăng nhập Vercel.</li><li>Import project.</li><li>Đặt file HTML là <b>index.html</b>.</li><li>Deploy.</li></ol></div>
+</div></div>
+</section>
+</main>
+
+<script>
+const DEFAULT_VOCABULARY=[
+{id:'v1',term:'Pythagorean Theorem',phonetic:'/paɪˌθæɡ.əˈriː.ən ˈθɪə.rəm/',category:'Geometry',vi:'Định lý Py-ta-go',def:'In a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides.',formula:'a^2+b^2=c^2',example:'In a right triangle with legs 3 and 4, the hypotenuse is 5.'},
+{id:'v2',term:'Hypotenuse',phonetic:'/haɪˈpɒt.ən.juːz/',category:'Geometry',vi:'Cạnh huyền',def:'The longest side of a right-angled triangle, opposite the right angle.',formula:'c=\\sqrt{a^2+b^2}',example:'The side opposite the 90° angle is the hypotenuse.'},
+{id:'v3',term:'Quadratic Equation',phonetic:'/kwɒdˈræt.ɪk ɪˈkweɪ.ʒən/',category:'Algebra',vi:'Phương trình bậc hai',def:'An equation of degree 2, meaning the highest exponent is 2.',formula:'ax^2+bx+c=0\\quad(a\\ne0)',example:'x²-5x+6=0 has roots 2 and 3.'},
+{id:'v4',term:'Prime Number',phonetic:'/praɪm ˈnʌm.bər/',category:'Arithmetic',vi:'Số nguyên tố',def:'A natural number greater than 1 that has no positive divisors other than 1 and itself.',formula:'P=\\{2,3,5,7,11,\\ldots\\}',example:'2 is the only even prime number.'},
+{id:'v5',term:'Standard Deviation',phonetic:'/ˈstæn.dəd ˌdiː.viˈeɪ.ʃən/',category:'Statistics',vi:'Độ lệch chuẩn',def:'A measure of the amount of variation or dispersion of a set of values.',formula:'\\sigma=\\sqrt{\\frac{\\sum(x_i-\\mu)^2}{N}}',example:'A low standard deviation means data are close to the mean.'},
+{id:'v6',term:'Derivative',phonetic:'/dɪˈrɪv.ə.tɪv/',category:'Calculus',vi:'Đạo hàm',def:'The rate of change of a function with respect to a variable.',formula:"f'(x)=\\lim_{h\\to0}\\frac{f(x+h)-f(x)}{h}",example:'The derivative of position with respect to time is velocity.'},
+{id:'v7',term:'Fraction',phonetic:'/ˈfræk.ʃən/',category:'Arithmetic',vi:'Phân số',def:'A numerical quantity representing a part of a whole.',formula:'\\frac{a}{b}\\quad(b\\ne0)',example:'In 3/4, 3 is the numerator and 4 is the denominator.'},
+{id:'v8',term:'Perpendicular Lines',phonetic:'/ˌpɜː.pənˈdɪk.jə.lər laɪnz/',category:'Geometry',vi:'Các đường thẳng vuông góc',def:'Lines that intersect at a right angle (90 degrees).',formula:'L_1\\perp L_2',example:'The x-axis and y-axis are perpendicular.'},
+{id:'v9',term:'Polynomial',phonetic:'/ˌpɒl.iˈnəʊ.mi.əl/',category:'Algebra',vi:'Đa thức',def:'An expression involving variables, coefficients, addition, subtraction and non-negative integer exponents.',formula:'P(x)=a_nx^n+\\cdots+a_0',example:'3x³+2x²-5 is a polynomial of degree 3.'}
+];
+
+let vocabularyList=[],practiceHistory=[],currentQuizQuestions=[],currentQuizIndex=0,quizUserAnswers=[],quizTimerInterval=null,quizSecondsElapsed=0,lineChartInstance=null,pieChartInstance=null,activeAudioElement=null;
+
+window.onload=()=>{initLocalStorage();renderVocabularyCards();updateAnalyticsDashboard();if('speechSynthesis' in window)speechSynthesis.getVoices()};
+
+function initLocalStorage(){
+try{const v=localStorage.getItem('mathlish_vocab');vocabularyList=v?JSON.parse(v):[...DEFAULT_VOCABULARY];if(!Array.isArray(vocabularyList))vocabularyList=[...DEFAULT_VOCABULARY];localStorage.setItem('mathlish_vocab',JSON.stringify(vocabularyList));}catch(e){vocabularyList=[...DEFAULT_VOCABULARY]}
+try{const h=localStorage.getItem('mathlish_history');practiceHistory=h?JSON.parse(h):[];if(!Array.isArray(practiceHistory))practiceHistory=[]}catch(e){practiceHistory=[]}
+}
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderKaTeX(latex,display=false){try{return katex.renderToString(String(latex),{displayMode:display,throwOnError:false})}catch(e){return esc(latex)}}
+function parseMathText(text){
+if(!text)return '';
+let safe=esc(text);
+return safe.replace(/\$([^$]+)\$/g,(_,f)=>renderKaTeX(f,false)).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+function switchTab(name){
+document.querySelectorAll('.tab-content').forEach(x=>x.classList.add('hidden'));
+document.querySelectorAll('.nav-tab').forEach(x=>{x.classList.remove('bg-brand-50','text-brand-700');x.classList.add('text-slate-600')});
+const t=document.getElementById('tab-'+name),b=document.getElementById('tab-btn-'+name);if(t)t.classList.remove('hidden');if(b){b.classList.add('bg-brand-50','text-brand-700');b.classList.remove('text-slate-600')}if(name==='analytics')updateAnalyticsDashboard()
+}
+
+function setAudioPlayingState(on,text=''){
+const toast=document.getElementById('audio-toast'),eq=document.getElementById('audio-eq'),msg=document.getElementById('audio-toast-msg');
+if(on){msg.textContent='🔊 Reading: "'+text+'"';eq.classList.remove('hidden');toast.classList.remove('translate-y-24','opacity-0')}else{toast.classList.add('translate-y-24','opacity-0');setTimeout(()=>eq.classList.add('hidden'),300)}
+}
+function showAudioToast(msg){const t=document.getElementById('audio-toast');document.getElementById('audio-toast-msg').textContent=msg;t.classList.remove('translate-y-24','opacity-0');setTimeout(()=>t.classList.add('translate-y-24','opacity-0'),2500)}
+function speakText(text){
+if(!text)return;const clean=String(text).replace(/\$|\\text\{([^}]+)\}/g,'$1').replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g,'$1 over $2').replace(/\\sqrt\{([^}]+)\}/g,'square root of $1').replace(/\^2/g,' squared').replace(/\\perp/g,' is perpendicular to ').replace(/\\ne/g,' is not equal to ');
+if('speechSynthesis' in window)window.speechSynthesis.cancel();if(activeAudioElement){activeAudioElement.pause();activeAudioElement=null}
+if(!('speechSynthesis'in window)){showAudioToast('⚠️ Trình duyệt không hỗ trợ đọc tiếng Anh.');return}
+setAudioPlayingState(true,clean);
+const u=new SpeechSynthesisUtterance(clean);u.lang='en-US';u.rate=.9;
+const voices=speechSynthesis.getVoices();u.voice=voices.find(v=>/^en-US/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang))||null;
+let done=false;u.onend=()=>{done=true;setAudioPlayingState(false)};u.onerror=()=>{done=true;setAudioPlayingState(false);showAudioToast('⚠️ Không thể phát âm. Hãy thử lại.')};speechSynthesis.speak(u);
+setTimeout(()=>{if(!done&&speechSynthesis.speaking){speechSynthesis.cancel();setAudioPlayingState(false);showAudioToast('⚠️ Phát âm bị gián đoạn. Hãy thử lại.')}},10000)
+}
+function testAudioSystem(){speakText('Welcome to Mathlish! The audio system is working.')}
+
+function renderVocabularyCards(){
+const grid=document.getElementById('vocab-grid'),empty=document.getElementById('vocab-empty'),s=(document.getElementById('vocab-search').value||'').toLowerCase().trim(),cat=document.getElementById('vocab-category-filter').value;
+const list=vocabularyList.filter(x=>(x.term+' '+x.vi+' '+x.def).toLowerCase().includes(s)&&(cat==='ALL'||x.category===cat));
+empty.classList.toggle('hidden',list.length>0);grid.innerHTML=list.map(item=>`
+<div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+<div><div class="flex items-start justify-between"><div><span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 mb-2">${esc(item.category)}</span><h3 class="text-lg font-bold text-slate-900">${esc(item.term)}</h3><p class="text-xs text-slate-400 font-mono">${esc(item.phonetic||'')}</p></div><button data-speak="${esc(item.term)}" onclick="speakText(this.dataset.speak)" class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 hover:bg-brand-600 hover:text-white flex items-center justify-center"><i class="fa-solid fa-volume-high"></i></button></div>
+<div class="mt-3 p-2.5 bg-brand-50 rounded-xl border border-brand-100"><span class="text-xs font-semibold text-brand-800 block">NGHĨA TIẾNG VIỆT</span><span class="text-sm font-semibold text-brand-900">${esc(item.vi)}</span></div>
+<p class="text-xs sm:text-sm text-slate-600 leading-relaxed mt-3">${esc(item.def)}</p>
+${item.formula?`<div class="mt-3 p-3 bg-slate-50 rounded-xl border text-center overflow-x-auto">${renderKaTeX(item.formula,true)}</div>`:''}</div>
+${item.example?`<div class="pt-3 border-t text-xs text-slate-500 italic"><b>Ví dụ:</b> "${esc(item.example)}"</div>`:''}</div>`).join('')
+}
+function filterVocabulary(){renderVocabularyCards()}
+function openAddTermModal(){document.getElementById('add-term-modal').classList.remove('hidden')}
+function closeAddTermModal(){document.getElementById('add-term-modal').classList.add('hidden')}
+function handleSaveCustomTerm(e){e.preventDefault();const x={id:'custom_'+Date.now(),term:document.getElementById('new-term-en').value.trim(),phonetic:document.getElementById('new-term-phonetic').value.trim(),category:document.getElementById('new-term-category').value,vi:document.getElementById('new-term-vi').value.trim(),def:document.getElementById('new-term-def').value.trim(),formula:document.getElementById('new-term-formula').value.trim(),example:''};vocabularyList.unshift(x);localStorage.setItem('mathlish_vocab',JSON.stringify(vocabularyList));renderVocabularyCards();document.getElementById('add-term-form').reset();closeAddTermModal();showAudioToast('✅ Đã lưu từ vựng!')}
+function exportVocabCSV(){downloadCSV('Mathlish_Vocabulary.csv',[['Thuật ngữ','Phiên âm','Chủ đề','Nghĩa tiếng Việt','Định nghĩa','Công thức'],...vocabularyList.map(v=>[v.term,v.phonetic,v.category,v.vi,v.def,v.formula])])}
+
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function generateSingleQuestion(topic,diff,index){
+const topics=['Arithmetic','Algebra','Geometry','Statistics'];const t=topic==='ALL'?topics[index%topics.length]:topic;
+if(t==='Geometry'){
+let a,b;if(diff==='Easy'){a=3;b=4}else if(diff==='Medium'){a=rand(3,8);b=rand(3,8)}else{a=rand(6,12);b=rand(6,12)}
+const c=Math.sqrt(a*a+b*b),cs=c.toFixed(2);return{topic:t,questionText:`In a right triangle, the legs are $a=${a}$ and $b=${b}$. What is the hypotenuse $c$?`,questionVi:`Trong tam giác vuông có hai cạnh góc vuông ${a} và ${b}, cạnh huyền bằng bao nhiêu?`,options:[`$c=${cs}$`,`$c=${(a+b).toFixed(2)}$`,`$c=${Math.abs(a-b).toFixed(2)}$`,`$c=${Math.sqrt(a*b).toFixed(2)}$`],correctIndex:0,explanation:`Apply the Pythagorean theorem: $c=\\\\sqrt{${a}^2+${b}^2}=\\\\sqrt{${a*a+b*b}}\\\\approx${cs}$.`};
+}
+if(t==='Algebra'){
+let r1=rand(1,diff==='Hard'?9:6),r2=rand(1,diff==='Hard'?9:6),sum=r1+r2,prod=r1*r2;return{topic:t,questionText:`Find the roots of $x^2-${sum}x+${prod}=0$.`,questionVi:`Tìm nghiệm của phương trình $x^2-${sum}x+${prod}=0$.`,options:[`$x_1=${r1},x_2=${r2}$`,`$x_1=-${r1},x_2=-${r2}$`,`$x_1=${sum},x_2=${prod}$`,`$x_1=${r1+1},x_2=${r2+1}$`],correctIndex:0,explanation:`Factor: $(x-${r1})(x-${r2})=0$. Therefore $x=${r1}$ or $x=${r2}$.`};
+}
+if(t==='Statistics'){
+let n=diff==='Easy'?4:diff==='Medium'?5:6,nums=Array.from({length:n},()=>rand(2,diff==='Hard'?20:12)),sum=nums.reduce((a,b)=>a+b,0),mean=sum/n;return{topic:t,questionText:`Calculate the mean of the dataset: $\\\\{${nums.join(', ')}\\\\}$.`,questionVi:`Tính trung bình cộng của tập dữ liệu.`,options:[`$Mean=${mean.toFixed(2)}$`,`$Mean=${sum}$`,`$Mean=${(mean+1).toFixed(2)}$`,`$Mean=${(mean/2).toFixed(2)}$`],correctIndex:0,explanation:`$Mean=\\\\frac{${sum}}{${n}}=${mean.toFixed(2)}$.`};
+}
+const prime=diff==='Easy'?7:diff==='Medium'?rand(11,50):rand(51,100);let p=prime;while(!isPrime(p))p++;return{topic:t,questionText:`Which number below is prime?`,questionVi:`Số nào dưới đây là số nguyên tố?`,options:[`$${p}$`,`$${p+2}$`,`$${p*2}$`,`$${p*3}$`],correctIndex:0,explanation:`$${p}$ is prime: it has no positive divisors other than 1 and itself.`}
+}
+function isPrime(n){if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true}
+function generateMathQuizQuestions(topic,diff,count){return Array.from({length:count},(_,i)=>generateSingleQuestion(topic,diff,i))}
+function startQuizSession(){
+const topic=document.getElementById('quiz-topic-select').value,diff=document.getElementById('quiz-difficulty-select').value,count=+document.getElementById('quiz-count-select').value;
+currentQuizQuestions=generateMathQuizQuestions(topic,diff,count);currentQuizIndex=0;quizUserAnswers=[];quizSecondsElapsed=0;document.getElementById('quiz-config-card').classList.add('hidden');document.getElementById('quiz-summary-card').classList.add('hidden');document.getElementById('quiz-active-card').classList.remove('hidden');if(quizTimerInterval)clearInterval(quizTimerInterval);quizTimerInterval=setInterval(()=>{quizSecondsElapsed++;document.getElementById('quiz-timer').textContent=formatTime(quizSecondsElapsed)},1000);renderCurrentQuizQuestion()
+}
+function resetQuizUI(){if(quizTimerInterval)clearInterval(quizTimerInterval);document.getElementById('quiz-summary-card').classList.add('hidden');document.getElementById('quiz-active-card').classList.add('hidden');document.getElementById('quiz-config-card').classList.remove('hidden')}
+function formatTime(sec){return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function renderCurrentQuizQuestion(){
+const q=currentQuizQuestions[currentQuizIndex],total=currentQuizQuestions.length;document.getElementById('quiz-step-badge').textContent=`Câu ${currentQuizIndex+1}/${total}`;document.getElementById('quiz-topic-badge').textContent=q.topic;document.getElementById('quiz-question-text').innerHTML=parseMathText(q.questionText);document.getElementById('quiz-question-vi').innerHTML=parseMathText(q.questionVi);const box=document.getElementById('quiz-explanation-box');box.classList.add('hidden');const next=document.getElementById('quiz-next-btn');next.disabled=true;next.className='px-6 py-2.5 bg-slate-200 text-slate-400 font-semibold rounded-xl';
+document.getElementById('quiz-options-grid').innerHTML=q.options.map((o,i)=>`<button onclick="selectQuizOption(${i})" id="quiz-opt-${i}" class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-left font-medium flex items-center space-x-3 hover:bg-slate-100"><span class="w-7 h-7 rounded-lg bg-white border text-xs font-bold flex items-center justify-center">${String.fromCharCode(65+i)}</span><span class="text-sm">${parseMathText(o)}</span></button>`).join('')
+}
+function selectQuizOption(idx){
+const q=currentQuizQuestions[currentQuizIndex],correct=idx===q.correctIndex;quizUserAnswers[currentQuizIndex]=idx;for(let i=0;i<q.options.length;i++){const b=document.getElementById('quiz-opt-'+i);b.disabled=true;b.className=i===q.correctIndex?'p-4 bg-emerald-50 border-2 border-emerald-500 rounded-xl text-left font-semibold text-emerald-900 flex items-center space-x-3':i===idx?'p-4 bg-red-50 border-2 border-red-500 rounded-xl text-left font-semibold text-red-900 flex items-center space-x-3':'p-4 bg-slate-50 border border-slate-200 opacity-50 rounded-xl text-left flex items-center space-x-3'}
+const box=document.getElementById('quiz-explanation-box'),icon=document.getElementById('quiz-feedback-icon'),title=document.getElementById('quiz-feedback-title');box.classList.remove('hidden');box.className=correct?'p-4 rounded-xl border bg-emerald-50 border-emerald-200 mb-6':'p-4 rounded-xl border bg-red-50 border-red-200 mb-6';icon.className=correct?'fa-solid fa-circle-check text-emerald-600 text-xl':'fa-solid fa-circle-xmark text-red-600 text-xl';title.textContent=correct?'Chính Xác!':'Chưa Đúng!';document.getElementById('quiz-explanation-content').innerHTML=parseMathText(q.explanation);const next=document.getElementById('quiz-next-btn');next.disabled=false;next.className='px-6 py-2.5 bg-brand-600 text-white font-semibold rounded-xl'
+}
+function speakCurrentQuestion(){if(currentQuizQuestions[currentQuizIndex])speakText(currentQuizQuestions[currentQuizIndex].questionText)}
+function nextQuizQuestion(){if(currentQuizIndex<currentQuizQuestions.length-1){currentQuizIndex++;renderCurrentQuizQuestion()}else finishQuizSession()}
+function finishQuizSession(){
+if(quizTimerInterval)clearInterval(quizTimerInterval);let correct=0;currentQuizQuestions.forEach((q,i)=>{if(quizUserAnswers[i]===q.correctIndex)correct++});const total=currentQuizQuestions.length,score=Math.round(correct/total*100),topic=document.getElementById('quiz-topic-select').value,diff=document.getElementById('quiz-difficulty-select').value;
+const session={id:'sess_'+Date.now(),date:new Date().toLocaleString('vi-VN'),topic,difficulty:diff,score,correctCount:correct,totalCount:total,timeSpent:formatTime(quizSecondsElapsed)};practiceHistory.unshift(session);localStorage.setItem('mathlish_history',JSON.stringify(practiceHistory));document.getElementById('summary-score').textContent=score+'%';document.getElementById('summary-correct').textContent=`${correct}/${total}`;document.getElementById('summary-time').textContent=session.timeSpent;document.getElementById('quiz-active-card').classList.add('hidden');document.getElementById('quiz-summary-card').classList.remove('hidden')
+}
+
+function updateAnalyticsDashboard(){
+document.getElementById('stat-total-quizzes').textContent=practiceHistory.length;if(!practiceHistory.length){document.getElementById('stat-avg-score').textContent='0%';document.getElementById('stat-total-time').textContent='0 phút';document.getElementById('stat-best-topic').textContent='Chưa có';renderHistoryTable([]);initCharts([],{});return}
+document.getElementById('stat-avg-score').textContent=Math.round(practiceHistory.reduce((s,h)=>s+h.score,0)/practiceHistory.length)+'%';let secs=0;practiceHistory.forEach(h=>{const [m,s]=h.timeSpent.split(':').map(Number);secs+=m*60+s});document.getElementById('stat-total-time').textContent=Math.round(secs/60)+' phút';
+const by={};practiceHistory.forEach(h=>{if(!by[h.topic])by[h.topic]={score:0,n:0,count:0};by[h.topic].score+=h.score;by[h.topic].n++;by[h.topic].count+=h.totalCount});let best=Object.entries(by).sort((a,b)=>(b[1].score/b[1].n)-(a[1].score/a[1].n))[0];document.getElementById('stat-best-topic').textContent=best?`${best[0]} (${Math.round(best[1].score/best[1].n)}%)`:'Chưa có';renderHistoryTable(practiceHistory);initCharts(practiceHistory,Object.fromEntries(Object.entries(by).map(([k,v])=>[k,v.count])))
+}
+function renderHistoryTable(list){document.getElementById('history-table-body').innerHTML=list.length?list.map(h=>`<tr class="hover:bg-slate-50"><td class="px-6 py-3">${esc(h.date)}</td><td class="px-6 py-3">${esc(h.topic)}</td><td class="px-6 py-3">${esc(h.difficulty)}</td><td class="px-6 py-3 font-bold">${h.correctCount}/${h.totalCount}</td><td class="px-6 py-3 font-bold">${h.score}%</td><td class="px-6 py-3">${h.timeSpent}</td></tr>`).join(''):'<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">Chưa có lịch sử.</td></tr>'}
+function initCharts(history,counts){
+if(lineChartInstance)lineChartInstance.destroy();if(pieChartInstance)pieChartInstance.destroy();const l=document.getElementById('score-line-chart').getContext('2d'),p=document.getElementById('topic-pie-chart').getContext('2d'),chron=[...history].reverse();lineChartInstance=new Chart(l,{type:'line',data:{labels:chron.map((_,i)=>'#'+(i+1)),datasets:[{label:'Điểm (%)',data:chron.map(h=>h.score),borderColor:'#4f46e5',backgroundColor:'rgba(79,70,229,.1)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}}}});pieChartInstance=new Chart(p,{type:'doughnut',data:{labels:Object.keys(counts).length?Object.keys(counts):['Chưa có'],datasets:[{data:Object.values(counts).length?Object.values(counts):[1],backgroundColor:['#6366f1','#10b981','#f59e0b','#ec4899','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false}})
+}
+function clearHistory(){if(confirm('Bạn có chắc muốn xóa toàn bộ lịch sử?')){practiceHistory=[];localStorage.removeItem('mathlish_history');updateAnalyticsDashboard()}}
+function exportHistoryCSV(){downloadCSV('Mathlish_Practice_History.csv',[['Thời gian','Chủ đề','Độ khó','Số câu đúng','Tổng số câu','Tỉ lệ','Thời gian'],...practiceHistory.map(h=>[h.date,h.topic,h.difficulty,h.correctCount,h.totalCount,h.score+'%',h.timeSpent])])}
+function downloadCSV(name,rows){let s='\\uFEFF'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\\r\\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
+
+function openShareModal(){switchTab('share-guide')}
+function downloadAppSourceCode(){const html='<!DOCTYPE html>\\n'+document.documentElement.outerHTML;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));a.download='index.html';document.body.appendChild(a);a.click();a.remove();showAudioToast('📥 Đã tải index.html')}
+async function copySourceCodeToClipboard(){const html='<!DOCTYPE html>\\n'+document.documentElement.outerHTML;try{await navigator.clipboard.writeText(html);showAudioToast('📋 Đã sao chép mã HTML')}catch(e){showAudioToast('⚠️ Không thể sao chép tự động. Hãy dùng nút tải file.')}}
+</script>
+</body>
+</html>
